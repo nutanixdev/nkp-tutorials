@@ -58,7 +58,7 @@ resource "nutanix_image" "nkp_image" {
   count       = length(data.nutanix_image.nkp_image.id) == 0 ? 1 : 0
   name        = local.nkp_image_name
   source_uri  = var.nkp_image_url
-  description = "OS image for NKP bastion VM uploaded via OpenTofu/Terraform"
+  description = "OS image for NKP bastion VM uploaded via Terraform"
   image_type  = "DISK_IMAGE"
 }
 
