@@ -1,0 +1,62 @@
+{
+	"name": "Nutanix Dev Station (Community)",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": {
+			// Update 'VARIANT' to pick a Python version: 3, 3.10, 3.9, 3.8, 3.7, 3.6
+			// Append -bullseye or -buster to pin to an OS version.
+			// Use -bullseye variants on local on arm64/Apple Silicon.
+			"VARIANT": "3.12-bookworm",
+			// Options
+			"ANSIBLE_VERSION": "9.5.1",
+			"PACKER_VERSION": "1.9.2",
+			"CALM_DSL_VERSION": "master",
+			"KUBECTL_KARBON": "true",
+			"NUTANIX_V4_SDK": "true",
+			"OPENSHIFT_CLI_VERSION": "stable-4.15",
+			"OPENSHIFT_INSTALL_VERSION": "stable-4.15",
+			"CLUSTERCTL_VERSION": "1.7.1",
+			"K9S_VERSION": "0.32.4",
+			"COOKIECUTTER_VERSION": "2.5.0"
+		}
+	},
+	"mounts": [
+		"source=vscode-devcontainer-nutanixdev-calmdsl-cache-${devcontainerId},target=/calm,type=volume",
+		"source=vscode-devcontainer-nutanixdev-bashhistory-${devcontainerId},target=/nutanixdev,type=volume",
+		"source=vscode-devcontainer-nutanixdev-profile-${localWorkspaceFolderBasename}-${devcontainerId},target=/home/vscode,type=volume",
+		"target=/home/vscode/.vscode-server,type=volume"
+	],
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {},
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
+		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
+		"ghcr.io/devcontainers/features/powershell:1": {},
+		"ghcr.io/devcontainers/features/terraform:1": {
+			"version": "1.5.5"
+			// "tflint": "0.50.3",
+			// "terragrunt": "0.57.8"
+		}
+	},
+	"postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.showExitAlert": false
+			},
+			"extensions": [
+				"richie5um2.vscode-statusbar-json-path",
+				"mutantdino.resourcemonitor",
+				"ms-kubernetes-tools.vscode-kubernetes-tools",
+				"humao.rest-client",
+				"mhutchie.git-graph",
+				"johnpapa.vscode-peacock",
+				"wayou.vscode-todo-highlight",
+				"timonwong.shellcheck",
+				"streetsidesoftware.code-spell-checker",
+				"yzhang.markdown-all-in-one",
+				"vscode-icons-team.vscode-icons"
+			]
+		}
+	}
+}
