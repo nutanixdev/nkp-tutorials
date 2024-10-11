@@ -1,3 +1,4 @@
+# Remove the extension .example and update with your values
 nutanix_username    = "admin"
 nutanix_password    = "password"
 nutanix_endpoint    = "192.168.0.1"
