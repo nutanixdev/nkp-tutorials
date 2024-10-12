@@ -10,10 +10,11 @@
 
 ## Overview
 
-This is an example to showcase one of the many possible approaches for automating the deployment of the first NKP management cluster using Terraform.
+This example showcases one of the many possible approaches for automating the deployment of the first NKP management cluster using Terraform.
 
 ## Prerequisites Checklist
 
+- Terraform installed (OpenTofu as an alternative)
 - Internet connectivity
 - URL for the Rocky Linux OS image available in the Nutanix Support Portal
 - URL for the NKP CLI available in the Nutanix Support Portal
@@ -26,18 +27,36 @@ This automation manifest will upload the Rocky Linux image to Prism Central if i
 
 **Note**: Destroying the deployment will destroy the bastion VM and the NKP management cluster.
 
-1. Rename the `nkp-cluster-config.auto.tfvars.example` to `nkp-cluster-config.auto.tfvars` and update its values.
+1. Clone this repository
 
-2. Apply the manifest and confirm
+    ```console
+    git clone https://github.com/nutanixdev/nkp-tutorials.git
+    ```
+
+2. Move into the tutorial folder
 
     ```console
     cd deploying-nkp-with-terraform
+    ```
+
+4. Rename the `nkp-cluster-config.auto.tfvars.example` to `nkp-cluster-config.auto.tfvars` and update its values
+
+    ```console
+    mv nkp-cluster-config.auto.tfvars.example nkp-cluster-config.auto.tfvars
+
+    vi nkp-cluster-config.auto.tfvars
+    # update values
+    ```
+
+5. Apply the manifest and confirm
+
+    ```console
     terraform init
     terraform apply
     # enter "yes", if ready
     ```
 
-3. A successful deployment will show a message like:
+6. A successful deployment will show a message like:
 
     ```console
     [...]
