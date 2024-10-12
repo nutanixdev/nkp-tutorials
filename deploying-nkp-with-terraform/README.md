@@ -36,7 +36,7 @@ This automation manifest will upload the Rocky Linux image to Prism Central if i
 2. Move into the tutorial folder
 
     ```console
-    cd deploying-nkp-with-terraform
+    cd nkp-tutorials/deploying-nkp-with-terraform
     ```
 
 4. Rename the `nkp-cluster-config.auto.tfvars.example` to `nkp-cluster-config.auto.tfvars` and update its values
