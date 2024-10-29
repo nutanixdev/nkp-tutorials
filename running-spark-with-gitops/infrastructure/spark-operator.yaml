@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spark-operator
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: spark-operator
+  namespace: spark-operator
+spec:
+  interval: 10m
+  provider: generic
+  timeout: 1m
+  url: https://kubeflow.github.io/spark-operator
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: spark
+  namespace: spark-operator
+spec:
+  chart:
+    spec:
+      chart: spark-operator
+      sourceRef:
+        kind: HelmRepository
+        name: spark-operator
+      version: 2.0.2
+  values:
+    controller:
+      uiIngress:
+        enable: true
+        ingressClassName: kommander-traefik
+        urlFormat: /{{$appNamespace}}/{{$appName}}
+  interval: 1m0s
