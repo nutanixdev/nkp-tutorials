@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kotaemon
+data:
+  gradio_server_name: 0.0.0.0
+  gradio_server_port: "7860"

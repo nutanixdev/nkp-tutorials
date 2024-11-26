@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kotaemon
+  labels:
+    app: kotaemon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kotaemon
+  template:
+    metadata:
+      labels:
+        app: kotaemon
+    spec:
+      containers:
+        - name: kotaemon-lite
+          image: ghcr.io/cinnamon/kotaemon:main-lite
+          ports:
+            - containerPort: 7860
+          env:
+            - name: GRADIO_SERVER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: kotaemon
+                  key: gradio_server_name
+            - name: GRADIO_SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: kotaemon
+                  key: gradio_server_port

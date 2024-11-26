@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kotaemon
+spec:
+  selector:
+    app: kotaemon
+  ports:
+    - protocol: TCP
+      port: 7860
+  type: LoadBalancer

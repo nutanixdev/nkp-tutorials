@@ -1,0 +1,26 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: http-redirect-ingressroute
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: PathPrefix(`/dkp/kotaemon`) || HostRegexp(`kotaemon.{subdomain:[0-9.]+}.sslip.io`)
+      kind: Rule
+      middlewares:
+        - name: redirect-to-sslip
+      services:
+        - name: kotaemon
+          port: 7860
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-to-sslip
+spec:
+  redirectRegex:
+    regex: ^http:\/\/([^\/]+)\/dkp/kotaemon/(.*)
+    replacement: "https://kotaemon.$1.sslip.io/"
