@@ -22,5 +22,5 @@ metadata:
   name: redirect-to-sslip
 spec:
   redirectRegex:
-    regex: ^http:\/\/([^\/]+)\/dkp/kotaemon/(.*)
+    regex: ^https:\/\/([^\/]+)\/dkp/kotaemon/(.*)
     replacement: "https://kotaemon.$1.sslip.io/"
