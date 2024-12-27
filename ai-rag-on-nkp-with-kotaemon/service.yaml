@@ -7,5 +7,6 @@ spec:
     app: kotaemon
   ports:
     - protocol: TCP
-      port: 7860
+      port: 80
+      targetPort: 7860
   type: LoadBalancer
