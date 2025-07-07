@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: localai
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: models-pvc
+  namespace: localai
+  labels:
+    app.kubernetes.io/name: localai
+    app.kubernetes.io/component: model-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: localai
+  namespace: localai
+  labels:
+    app.kubernetes.io/name: localai
+    app.kubernetes.io/component: inference-server
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: localai
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: localai
+      name: localai
+    spec:
+      containers:
+        - name: localai
+          image: quay.io/go-skynet/local-ai:latest-cpu
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: LOCALAI_PRELOAD_MODELS
+              value: '[{"id":"localai@qwen2.5-coder-1.5b-instruct"}]'
+            - name: DEBUG
+              value: "true"
+          ports:
+            - containerPort: 8080
+              name: http
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          volumeMounts:
+            - name: models-volume
+              mountPath: /build/models
+      volumes:
+        - name: models-volume
+          persistentVolumeClaim:
+            claimName: models-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: localai
+  namespace: localai
+  labels:
+    app.kubernetes.io/name: localai
+spec:
+  selector:
+    app.kubernetes.io/name: localai
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: localai
+  namespace: localai
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: localai-redirect-to-sslip@kubernetescrd
+spec:
+  ingressClassName: kommander-traefik
+  rules:
+    - http:
+        paths:
+          - path: /localai
+            pathType: Prefix
+            backend:
+              service:
+                name: localai
+                port:
+                  number: 8080
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-to-sslip
+  namespace: localai
+spec:
+  redirectRegex:
+    regex: ^https:\/\/([^\/]+)\/localai\/?(.*)
+    replacement: "https://localai.$1.sslip.io/"
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: localai-fqdn-route
+  namespace: localai
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: HostRegexp(`localai.{subdomain:[0-9.]+}.sslip.io`)
+      syntax: v2
+      kind: Rule
+      services:
+        - name: localai
+          port: 8080
