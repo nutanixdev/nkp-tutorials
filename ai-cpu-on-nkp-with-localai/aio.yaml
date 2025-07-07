@@ -86,24 +86,6 @@ spec:
       targetPort: 8080
       name: http
 ---
-# apiVersion: traefik.io/v1alpha1
-# kind: IngressRoute
-# metadata:
-#   name: localai-path-redirect
-#   namespace: localai
-# spec:
-#   entryPoints:
-#     - web
-#     - websecure
-#   routes:
-#     - match: PathPrefix(`/localai`)
-#       kind: Rule
-#       middlewares:
-#         - name: redirect-to-sslip
-#       services:
-#         - name: localai
-#           port: 8080
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
