@@ -5,6 +5,7 @@
 # Tutorials
 
 - [Deploying an NKP Management Cluster with Terraform](./deploying-nkp-with-terraform/)
+- [🧠 Running LocalAI Inference on Kubernetes with NKP](./ai-cpu-on-nkp-with-localai/)
 
 ## Support and Disclaimer
 
