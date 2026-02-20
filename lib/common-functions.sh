@@ -13,30 +13,25 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Debug Logger
-# Usage: debug_log "Your message here"
 debug_log() {
     if [ "${NUTANIX_DEBUG}" = "true" ]; then
-        echo -e "${YELLOW}[DEBUG]${NC} $1"
+        # This sends the message to the terminal but NOT into variables
+        echo -e "${YELLOW}[DEBUG]${NC} $1" >&2
     fi
 }
 
-# Success Logger
 log_success() {
     echo -e "${GREEN}✓ $1${NC}"
 }
 
-# Error Logger
 log_error() {
     echo -e "${RED}ERROR: $1${NC}"
 }
 
-# Info Logger
 log_info() {
     echo -e "${BLUE}INFO: $1${NC}"
 }
 
-# Load Environment File
-# Usage: load_env "/path/to/file.env"
 load_env() {
     local env_file=$1
     if [ -f "$env_file" ]; then

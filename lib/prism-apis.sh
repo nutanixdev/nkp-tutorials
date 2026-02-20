@@ -5,77 +5,136 @@
 # Purpose: Reusable Nutanix Prism Central v3 API functions.
 # ==============================================================================
 
-# Internal helper for API calls
-_pc_call() {
-    local method=$1
-    local endpoint=$2
-    local data=$3
-    local insecure=""
-    [ "$NUTANIX_INSECURE" = "true" ] && insecure="-k"
+# --- INTERNAL HELPER ---
 
-    curl $insecure -s -u "$NUTANIX_USER:$NUTANIX_PASSWORD" \
-        -X "$method" "https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/api/nutanix/v3/$endpoint" \
+# Centralized function for all REST API calls
+_pc_call() {
+    local method="$1"
+    local endpoint="$2"
+    local data="$3"
+    local insecure=""
+    
+    [ "$NUTANIX_INSECURE" = "true" ] && insecure="-k"
+    local url="https://$NUTANIX_ENDPOINT:$NUTANIX_PORT/api/nutanix/v3/$endpoint"
+
+    debug_log "API Request: [$method] $url"
+    [ -n "$data" ] && debug_log "Request Body: $data"
+
+    local response
+    response=$(curl $insecure -s -u "$NUTANIX_USER:$NUTANIX_PASSWORD" \
+        -X "$method" "$url" \
         -H "Content-Type: application/json" \
-        -d "$data"
+        -d "$data")
+
+    # Error check: if response is empty, the connection likely failed
+    if [ -z "$response" ]; then
+        log_error "No response from Prism Central at $url"
+        return 1
+    fi
+
+    debug_log "API Response Received."
+    debug_log "Full Content: $response"
+    
+    echo "$response"
 }
 
-# List Images with a custom filter
+# --- CLUSTER FUNCTIONS ---
+
+# List AOS Clusters (Filters out Prism Central instances)
+pc_list_clusters() {
+    local raw_data
+    raw_data=$(_pc_call "POST" "clusters/list" '{"kind": "cluster"}')
+    
+    # Selection: entities where .status.resources.config.service_list does NOT contain "PRISM_CENTRAL"
+    echo "$raw_data" | jq -c '
+        .entities |= map(
+            select(
+                (.status.resources.config.service_list // []) | 
+                contains(["PRISM_CENTRAL"]) | not
+            )
+        )'
+}
+
+# --- IMAGE FUNCTIONS ---
+
+# List Images with a specific filter
 pc_list_images() {
-    local filter=$1
-    local payload="{\"kind\": \"image\", \"filter\": \"$filter\"}"
+    local filter="$1"
+    local payload
+    payload=$(jq -n --arg f "$filter" '{kind: "image", filter: $f}')
+    
     _pc_call "POST" "images/list" "$payload"
 }
 
-# Import an Image from URL
+# Import Image from URL
 pc_import_image() {
-    local name=$1
-    local url=$2
-    local payload="{
-        \"spec\": {
-            \"name\": \"$name\",
-            \"resources\": {
-                \"image_type\": \"DISK_IMAGE\",
-                \"source_uri\": \"$url\"
-            }
-        },
-        \"metadata\": { \"kind\": \"image\" }
-    }"
+    local name="$1"
+    local url="$2"
+    local payload
+    
+    # Build JSON safely with jq to handle special characters in URLs/Names
+    payload=$(jq -n \
+        --arg n "$name" \
+        --arg u "$url" \
+        '{
+            spec: {
+                name: $n,
+                resources: {
+                    image_type: "DISK_IMAGE",
+                    source_uri: $u
+                }
+            },
+            metadata: { kind: "image" }
+        }')
+        
     _pc_call "POST" "images" "$payload"
 }
 
-# Wait for a Task to complete
-# Usage: pc_wait_for_task "task-uuid-here"
+# --- SUBNET FUNCTIONS ---
+
+# List all subnets
+pc_list_subnets() {
+    _pc_call "POST" "subnets/list" '{"kind": "subnet"}'
+}
+
+# --- TASK FUNCTIONS ---
+
+# Poll a Task until completion (SUCCEEDED) or failure (FAILED)
 pc_wait_for_task() {
-    local task_uuid=$1
+    local task_uuid="$1"
     local status="RUNNING"
     local attempt=1
-    local max_attempts=60 # 5 minutes with 5s sleep
-
-    log_info "Monitoring task: $task_uuid"
+    local max_attempts=120 # 10 minutes total (120 * 5s)
 
     while [[ "$status" == "RUNNING" || "$status" == "PENDING" || "$status" == "QUEUED" ]]; do
-        if [ $attempt -gt $max_attempts ]; then
-            log_error "Timeout waiting for task $task_uuid"
+        if [ "$attempt" -gt "$max_attempts" ]; then
+            log_error "Timeout: Task $task_uuid exceeded $max_attempts attempts."
             return 1
         fi
 
-        # Get task status
-        local task_resp=$(_pc_call "GET" "tasks/$task_uuid" "")
-        status=$(echo "$task_resp" | jq -r '.status')
-        local progress=$(echo "$task_resp" | jq -r '.percentage_complete // 0')
+        local task_resp
+        task_resp=$(_pc_call "GET" "tasks/$task_uuid" "")
+        status=$(echo "$task_resp" | jq -r '.status // "FAILED"')
 
-        if [[ "$status" == "SUCCEEDED" ]]; then
-            log_success "Task completed successfully."
-            return 0
-        elif [[ "$status" == "FAILED" ]]; then
-            local reason=$(echo "$task_resp" | jq -r '.error_detail')
-            log_error "Task failed: $reason"
-            return 1
-        fi
-
-        debug_log "Task $task_uuid: $status ($progress%)"
-        echo -n "." # Visual progress indicator
-        sleep 5
-        ((attempt++))
+        case "$status" in
+            "SUCCEEDED")
+                echo "" >&2 # Clear the progress line
+                log_success "Task $task_uuid completed successfully."
+                return 0
+                ;;
+            "FAILED")
+                echo "" >&2
+                local err
+                err=$(echo "$task_resp" | jq -r '.error_detail // "Unknown API Error"')
+                log_error "Task $task_uuid failed: $err"
+                return 1
+                ;;
+            *)
+                # Print progress dots to stderr to keep stdout clean for data capture
+                echo -n "." >&2
+                sleep 5
+                ((attempt++))
+                ;;
+        esac
     done
 }

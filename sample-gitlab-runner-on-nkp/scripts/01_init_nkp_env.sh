@@ -2,64 +2,89 @@
 
 # ==============================================================================
 # Script: 01_init_nkp_env.sh
-# Purpose: basic configuration and credential gathering for NKP & GitLab.
-# Usage: ./scripts/01_init_nkp_env.sh
+# Purpose: Initialize or update environment credentials for NKP tutorial.
+# Usage: ./scripts/01_init_nkp_env.sh (Run from project root)
 # ==============================================================================
 
-# 1. Determine Project Root (the directory above 'scripts')
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CONFIG_DIR="$PROJECT_ROOT/configs"
-ENV_FILE="$CONFIG_DIR/nkp.env"
+# 1. Path Resolution
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+LIB_FILE="$REPO_ROOT/lib/common-functions.sh"
+CONFIG_DIR="$SCRIPT_DIR/../configs"
+USER_ENV="$CONFIG_DIR/nkp.env"
 
-# Ensure the configs directory exists
+# Source Common Functions
+if [ -f "$LIB_FILE" ]; then
+    source "$LIB_FILE"
+else
+    echo "ERROR: Could not find lib/common-functions.sh at $LIB_FILE"
+    exit 1
+fi
+
 mkdir -p "$CONFIG_DIR"
 
 echo "-----------------------------------------------------"
-echo "  [STEP 01] Nutanix NKP Environment Initializer"
-echo "  Target: $ENV_FILE"
+log_info "[STEP 01] Nutanix NKP Environment Initializer"
 echo "-----------------------------------------------------"
 
-# 2. Gather Inputs
-# Mandatory Nutanix Credentials
-read -p "Enter NUTANIX_USER: " NUTANIX_USER
-read -s -p "Enter NUTANIX_PASSWORD: " NUTANIX_PASSWORD
-echo "" # New line after hidden password input
+# 2. Check for existing config
+RECREATE="true"
+if [ -f "$USER_ENV" ]; then
+    log_info "An existing configuration was found at $USER_ENV"
+    read -p "Do you want to use the existing configuration? (y/n) [y]: " USE_EXISTING
+    USE_EXISTING=${USE_EXISTING:-y}
 
-# Connection details with Default Values
-read -p "Enter NUTANIX_ENDPOINT [10.0.0.1]: " INPUT_ENDPOINT
-NUTANIX_ENDPOINT=${INPUT_ENDPOINT:-10.0.0.1}
+    if [[ "$USE_EXISTING" =~ ^[Yy]$ ]]; then
+        RECREATE="false"
+        log_success "Using existing configuration."
+    else
+        # Load existing values into memory to use as defaults
+        source "$USER_ENV"
+        log_info "Updating configuration. Current values will be shown as defaults."
+    fi
+fi
 
-read -p "Enter NUTANIX_PORT [9440]: " INPUT_PORT
-NUTANIX_PORT=${INPUT_PORT:-9440}
+# 3. Prompting Phase (Only if RECREATE is true)
+if [ "$RECREATE" = "true" ]; then
+    # Helper to prompt with existing variable as default
+    # Usage: prompt_default "Prompt Name" "CurrentVarValue" "GlobalDefaultIfNoVar"
+    
+    read -p "Enter NUTANIX_USER [${NUTANIX_USER}]: " NEW_USER
+    NUTANIX_USER=${NEW_USER:-$NUTANIX_USER}
 
-# Settings with Defaults
-read -p "Allow Insecure SSL (true/false) [true]: " INPUT_INSECURE
-NUTANIX_INSECURE=${INPUT_INSECURE:-true}
+    read -s -p "Enter NUTANIX_PASSWORD (hidden): " NEW_PASS
+    # If they just press enter, keep the old password
+    NUTANIX_PASSWORD=${NEW_PASS:-$NUTANIX_PASSWORD}
+    echo ""
 
-read -p "Request Timeout in seconds [60]: " INPUT_TIMEOUT
-NUTANIX_TIMEOUT=${INPUT_TIMEOUT:-60}
+    read -p "Enter NUTANIX_ENDPOINT [${NUTANIX_ENDPOINT:-10.0.0.1}]: " NEW_ENDPOINT
+    NUTANIX_ENDPOINT=${NEW_ENDPOINT:-${NUTANIX_ENDPOINT:-10.0.0.1}}
 
-# 3. Generate the Credentials File
-# We use 'export' inside the file so it can be 'sourced' easily by other scripts.
-cat <<EOF > "$ENV_FILE"
-# Nutanix NKP Credentials - Auto-generated
-# Generated on: $(date)
+    read -p "Enter NUTANIX_PORT [${NUTANIX_PORT:-9440}]: " NEW_PORT
+    NUTANIX_PORT=${NEW_PORT:-${NUTANIX_PORT:-9440}}
 
+    read -p "Allow Insecure SSL [${NUTANIX_INSECURE:-true}]: " NEW_INSECURE
+    NUTANIX_INSECURE=${NEW_INSECURE:-${NUTANIX_INSECURE:-true}}
+
+    read -p "Enable Debug Mode [${NUTANIX_DEBUG:-false}]: " NEW_DEBUG
+    NUTANIX_DEBUG=${NEW_DEBUG:-${NUTANIX_DEBUG:-false}}
+
+    # 4. Generate the Credentials File
+    cat <<EOF > "$USER_ENV"
+# Nutanix NKP Credentials - Updated $(date)
 export NUTANIX_USER="$NUTANIX_USER"
 export NUTANIX_PASSWORD="$NUTANIX_PASSWORD"
 export NUTANIX_ENDPOINT="$NUTANIX_ENDPOINT"
 export NUTANIX_PORT="$NUTANIX_PORT"
 export NUTANIX_INSECURE="$NUTANIX_INSECURE"
-export NUTANIX_TIMEOUT="$NUTANIX_TIMEOUT"
-export PROJECT_ROOT="$PROJECT_ROOT"
+export NUTANIX_DEBUG="$NUTANIX_DEBUG"
 EOF
 
-# 4. Set Permissions (Read/Write for owner only)
-chmod 600 "$ENV_FILE"
+    chmod 600 "$USER_ENV"
+    log_info "Security: File permissions restricted (chmod 600)."
+    log_success "Configuration saved to $USER_ENV."
+fi
 
 echo "-----------------------------------------------------"
-echo "SUCCESS: Configuration saved to configs/nkp.env"
-echo "Security: File permissions restricted (chmod 600)."
-echo ""
-echo "NEXT STEP: Run ./scripts/02_validate_cluster.sh"
+log_info "NEXT STEP: Run ./scripts/02_check_prerequisites.sh"
 echo "-----------------------------------------------------"

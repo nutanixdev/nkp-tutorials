@@ -1,0 +1,23 @@
+# --- Nutanix NKP Tutorial Ignore List ---
+
+# Ignore all user-specific configs and secrets
+configs/*
+
+# But DO NOT ignore the deployment defaults
+!configs/nkp-defaults.env
+
+# Ignore any OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore shell history or swap files that might be created during editing
+*.swp
+*~
+.bash_history
+
+# If users use local IDEs, ignore their metadata
+.vscode/
+.idea/
+
+# NKP clusters, ignore generated kubeconfigs
+*.conf
