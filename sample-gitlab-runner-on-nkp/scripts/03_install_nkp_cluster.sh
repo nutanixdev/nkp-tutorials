@@ -70,8 +70,8 @@ done
 [ "$MISSING_FOUND" = true ] && log_success "All missing variables captured and persisted."
 
 # --- PART 3: VERSIONING ---
-NKP_VERSION=$(nkp version -o=json | jq -r '.nkp.gitVersion')
-log_info "Executing deployment with NKP version: $NKP_VERSION"
+# NKP_VERSION=$(nkp version -o=json | jq -r '.nkp.gitVersion')
+# log_info "Executing deployment with NKP version: $NKP_VERSION"
 
 # --- PART 4: CLUSTER CREATION ---
 log_info "Initiating Nutanix cluster creation for: $CLUSTER_NAME"
@@ -89,6 +89,8 @@ nkp create cluster nutanix -c "$CLUSTER_NAME" \
     --worker-replicas "$WORKER_NODES_REPLICAS" \
     --csi-storage-container "$NUTANIX_STORAGE_CONTAINER_NAME" \
     --vm-image "$NUTANIX_MACHINE_TEMPLATE_IMAGE_NAME" \
+    ${REGISTRY_MIRROR_URL:+--registry-mirror-url https://"$REGISTRY_MIRROR_URL"} \
+    ${REGISTRY_MIRROR_URL:+--skip-preflight-checks=Registry} \
     --self-managed
 
 # --- PART 5: POST-INSTALLATION ---
