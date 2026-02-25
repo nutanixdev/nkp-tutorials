@@ -89,6 +89,9 @@ nkp create cluster nutanix -c "$CLUSTER_NAME" \
     --worker-replicas "$WORKER_NODES_REPLICAS" \
     --csi-storage-container "$NUTANIX_STORAGE_CONTAINER_NAME" \
     --vm-image "$NUTANIX_MACHINE_TEMPLATE_IMAGE_NAME" \
+    ${REGISTRY_URL:+--registry-url https://"$REGISTRY_URL"} \
+    ${REGISTRY_USERNAME:+--registry-username "$REGISTRY_USERNAME"} \
+    ${REGISTRY_PASSWORD:+--registry-password "$REGISTRY_PASSWORD"} \
     ${REGISTRY_MIRROR_URL:+--registry-mirror-url https://"$REGISTRY_MIRROR_URL"} \
     ${REGISTRY_MIRROR_URL:+--skip-preflight-checks=Registry} \
     --self-managed

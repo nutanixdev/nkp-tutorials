@@ -21,3 +21,9 @@ Thumbs.db
 
 # NKP clusters, ignore generated kubeconfigs
 *.conf
+
+# DO NOT ignore examples
+!*.example
+
+# Ignore tar files
+*.tar.gz
