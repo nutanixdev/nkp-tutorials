@@ -7,7 +7,7 @@
 # spec:
 #   interval: 10m
 #   retryInterval: 1m
-#   path: ./infrastructure/gateway_api/wordpress
+#   path: ./nkp-ha-application/infrastructure/gateway_api/wordpress
 #   prune: true
 #   sourceRef:
 #     kind: GitRepository
@@ -26,7 +26,7 @@
 # spec:
 #   interval: 10m
 #   retryInterval: 1m
-#   path: ./infrastructure/gslb/wordpress
+#   path: ./nkp-ha-application/infrastructure/gslb/wordpress
 #   prune: true
 #   sourceRef:
 #     kind: GitRepository
@@ -44,7 +44,7 @@
 #     - name: wordpress-gslb
 #   interval: 10m
 #   retryInterval: 1m
-#   path: ./applications/wordpress/overlays
+#   path: ./nkp-ha-application/applications/wordpress/overlays
 #   prune: true
 #   sourceRef:
 #     kind: GitRepository
@@ -62,7 +62,7 @@
 #   namespace: flux-system
 # spec:
 #   interval: 10m
-#   path: ./apps/wordpress/base
+#   path: ./nkp-ha-application/applications/wordpress/base
 #   prune: true
 #   sourceRef:
 #     kind: GitRepository

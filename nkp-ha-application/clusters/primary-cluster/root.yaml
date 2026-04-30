@@ -1,12 +1,12 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: cluster-root
-  namespace: flux-system
+ name: cluster-root
+ namespace: flux-system
 spec:
-  interval: 10m
-  path: ./clusters/primary-cluster
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: technote-repo
+ interval: 10m
+ path: ./nkp-ha-application/clusters/primary-cluster
+ prune: true
+ sourceRef:
+   kind: GitRepository
+   name: technote-repo
