@@ -7,7 +7,7 @@ metadata:
 spec:
   interval: 10m
   retryInterval: 1m
-  path: ./infrastructure/gateway_api/boutique
+  path: ./nkp-ha-application/infrastructure/gateway_api/boutique
   prune: true
   sourceRef:
     kind: GitRepository
@@ -26,7 +26,7 @@ metadata:
 spec:
   interval: 10m
   retryInterval: 1m
-  path: ./infrastructure/gslb/boutique
+  path: ./nkp-ha-application/infrastructure/gslb/boutique
   prune: true
   sourceRef:
     kind: GitRepository
@@ -44,7 +44,7 @@ spec:
     - name: boutique-gslb
   interval: 10m
   retryInterval: 1m
-  path: ./applications/boutique/overlays
+  path: ./nkp-ha-application/applications/boutique/overlays
   prune: true
   sourceRef:
     kind: GitRepository
