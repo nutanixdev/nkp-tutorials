@@ -29,23 +29,23 @@ Add the k8gb Helm repository and install the chart on each cluster with the appr
 
 ```bash
 helm repo add k8gb https://www.k8gb.io
-helm install k8gb k8gb/k8gb \
-  --namespace k8gb --create-namespace \
+helm install k8gb k8gb/k8gb -n k8gb --create-namespace \
   --set k8gb.clusterGeoTag="k8s-primary" \
   --set k8gb.extGslbClustersGeoTags="k8s-dr" \
+  --set k8gb.reconcileRequeueSeconds=10 \
   --set k8gb.nsRecordTTL=60 \
   --set 'k8gb.dnsZones[0].loadBalancedZone=gslb.thencpnutanix.com' \
   --set 'k8gb.dnsZones[0].parentZone=thencpnutanix.com' \
   --set extdns.enabled=true \
-  --set extdns.fullnameOverride="k8gb-external-dns" \
+  --set extdns.interval="20s" \
+  --set extdns.fullnameOverride="extdns" \
   --set 'extdns.provider.name=cloudflare' \
   --set 'extdns.domainFilters[0]=thencpnutanix.com' \
   --set 'extdns.txtPrefix=k8gb-k8s-primary-' \
-  --set 'extdns.txtOwnerId=k8gb-gslb.thencpnutanix.com-k8s-primary' \
+  --set 'extdns.txtOwnerId=k8s-primary' \
   --set 'extdns.env[0].name=CF_API_TOKEN' \
   --set 'extdns.env[0].valueFrom.secretKeyRef.name=cloudflare' \
   --set 'extdns.env[0].valueFrom.secretKeyRef.key=token' \
-  --set coredns.enabled=true \
   --set coredns.serviceType=LoadBalancer
 ```
 
@@ -53,23 +53,23 @@ helm install k8gb k8gb/k8gb \
 
 ```bash
 helm repo add k8gb https://www.k8gb.io
-helm install k8gb k8gb/k8gb \
-  --namespace k8gb --create-namespace \
+helm install k8gb k8gb/k8gb -n k8gb --create-namespace \
   --set k8gb.clusterGeoTag="k8s-dr" \
   --set k8gb.extGslbClustersGeoTags="k8s-primary" \
+  --set k8gb.reconcileRequeueSeconds=10 \
   --set k8gb.nsRecordTTL=60 \
   --set 'k8gb.dnsZones[0].loadBalancedZone=gslb.thencpnutanix.com' \
   --set 'k8gb.dnsZones[0].parentZone=thencpnutanix.com' \
   --set extdns.enabled=true \
-  --set extdns.fullnameOverride="k8gb-external-dns" \
+  --set extdns.interval="20s" \
+  --set extdns.fullnameOverride="extdns" \
   --set 'extdns.provider.name=cloudflare' \
   --set 'extdns.domainFilters[0]=thencpnutanix.com' \
   --set 'extdns.txtPrefix=k8gb-k8s-dr-' \
-  --set 'extdns.txtOwnerId=k8gb-gslb.thencpnutanix.com-k8s-dr' \
+  --set 'extdns.txtOwnerId=k8s-dr' \
   --set 'extdns.env[0].name=CF_API_TOKEN' \
   --set 'extdns.env[0].valueFrom.secretKeyRef.name=cloudflare' \
   --set 'extdns.env[0].valueFrom.secretKeyRef.key=token' \
-  --set coredns.enabled=true \
   --set coredns.serviceType=LoadBalancer
 ```
 

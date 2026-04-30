@@ -1,54 +1,54 @@
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: wordpress-gatewayapi
-  namespace: flux-system
-spec:
-  interval: 10m
-  retryInterval: 1m
-  path: ./infrastructure/gateway_api/wordpress
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: technote-repo
-  postBuild:
-    substituteFrom:
-      - kind: ConfigMap
-        name: cluster-settings # Injects wordpress.gslb.thencpnutanix.com
+# ---
+# apiVersion: kustomize.toolkit.fluxcd.io/v1
+# kind: Kustomization
+# metadata:
+#   name: wordpress-gatewayapi
+#   namespace: flux-system
+# spec:
+#   interval: 10m
+#   retryInterval: 1m
+#   path: ./infrastructure/gateway_api/wordpress
+#   prune: true
+#   sourceRef:
+#     kind: GitRepository
+#     name: technote-repo
+#   postBuild:
+#     substituteFrom:
+#       - kind: ConfigMap
+#         name: cluster-settings # Injects wordpress.gslb.thencpnutanix.com
 
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: wordpress-gslb
-  namespace: flux-system
-spec:
-  interval: 10m
-  retryInterval: 1m
-  path: ./infrastructure/gslb/wordpress
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: technote-repo
+# ---
+# apiVersion: kustomize.toolkit.fluxcd.io/v1
+# kind: Kustomization
+# metadata:
+#   name: wordpress-gslb
+#   namespace: flux-system
+# spec:
+#   interval: 10m
+#   retryInterval: 1m
+#   path: ./infrastructure/gslb/wordpress
+#   prune: true
+#   sourceRef:
+#     kind: GitRepository
+#     name: technote-repo
 
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: wordpress-app
-  namespace: flux-system
-spec:
-  dependsOn:
-    - name: wordpress-gatewayapi
-    - name: wordpress-gslb
-  interval: 10m
-  retryInterval: 1m
-  path: ./applications/wordpress/overlays
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: technote-repo
+# ---
+# apiVersion: kustomize.toolkit.fluxcd.io/v1
+# kind: Kustomization
+# metadata:
+#   name: wordpress-app
+#   namespace: flux-system
+# spec:
+#   dependsOn:
+#     - name: wordpress-gatewayapi
+#     - name: wordpress-gslb
+#   interval: 10m
+#   retryInterval: 1m
+#   path: ./applications/wordpress/overlays
+#   prune: true
+#   sourceRef:
+#     kind: GitRepository
+#     name: technote-repo
 
 
 

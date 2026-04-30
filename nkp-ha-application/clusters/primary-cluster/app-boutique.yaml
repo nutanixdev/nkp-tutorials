@@ -1,51 +1,51 @@
-# ---
-# apiVersion: kustomize.toolkit.fluxcd.io/v1
-# kind: Kustomization
-# metadata:
-#   name: boutique-gatewayapi
-#   namespace: flux-system
-# spec:
-#   interval: 10m
-#   retryInterval: 1m
-#   path: ./infrastructure/gateway_api/boutique
-#   prune: true
-#   sourceRef:
-#     kind: GitRepository
-#     name: technote-repo
-#   postBuild:
-#     substituteFrom:
-#       - kind: ConfigMap
-#         name: cluster-settings # Injects boutique.gslb.thencpnutanix.com
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: boutique-gatewayapi
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  path: ./infrastructure/gateway_api/boutique
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: technote-repo
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings # Injects boutique.gslb.thencpnutanix.com
 
-# ---
-# apiVersion: kustomize.toolkit.fluxcd.io/v1
-# kind: Kustomization
-# metadata:
-#   name: boutique-gslb
-#   namespace: flux-system
-# spec:
-#   interval: 10m
-#   retryInterval: 1m
-#   path: ./infrastructure/gslb/boutique
-#   prune: true
-#   sourceRef:
-#     kind: GitRepository
-#     name: technote-repo
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: boutique-gslb
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  path: ./infrastructure/gslb/boutique
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: technote-repo
 
-# ---
-# apiVersion: kustomize.toolkit.fluxcd.io/v1
-# kind: Kustomization
-# metadata:
-#   name: boutique-app
-#   namespace: flux-system
-# spec:
-#   dependsOn:
-#     - name: boutique-gatewayapi
-#     - name: boutique-gslb
-#   interval: 10m
-#   retryInterval: 1m
-#   path: ./applications/boutique/overlays
-#   prune: true
-#   sourceRef:
-#     kind: GitRepository
-#     name: technote-repo
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: boutique-app
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: boutique-gatewayapi
+    - name: boutique-gslb
+  interval: 10m
+  retryInterval: 1m
+  path: ./applications/boutique/overlays
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: technote-repo
