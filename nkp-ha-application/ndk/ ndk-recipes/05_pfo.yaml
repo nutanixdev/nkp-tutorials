@@ -27,6 +27,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: ndk-migrate-job
+  namespace: ndk-dr
 spec:
   activeDeadlineSeconds: 21600 # 6 hours, estimate for multiple apps
   template:
@@ -65,16 +66,16 @@ spec:
           name: migrate-config
       - name: source-secret-volume
         secret:
-          secretName: source-kubeconfig-secret
+          secretName: target-kubeconfig-secret
       - name: target-secret-volume
         secret:
-          secretName: target-kubeconfig-secret
+          secretName: source-kubeconfig-secret
       - name: ndk-primary-pc-creds-volume
         secret:
-          secretName: ndk-failover-primary-pc-creds
+          secretName: ndk-failover-secondary-pc-creds
           optional: true
       - name: ndk-secondary-pc-creds-volume
         secret:
-          secretName: ndk-failover-secondary-pc-creds
+          secretName: ndk-failover-primary-pc-creds
           optional: true
   backoffLimit: 0 # no restart on failure
