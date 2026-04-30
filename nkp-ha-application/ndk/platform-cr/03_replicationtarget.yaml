@@ -1,0 +1,10 @@
+### Create a target to replicate snapshots
+
+apiVersion: dataservices.nutanix.com/v1alpha1
+kind: ReplicationTarget
+metadata:
+  name: replication-target-wordpress
+  namespace: wordpress
+spec:
+  namespaceName: wordpress
+  remoteName: ndk-nutanix-secondary

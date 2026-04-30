@@ -1,0 +1,7 @@
+---
+apiVersion: dataservices.nutanix.com/v1alpha1
+kind: Application
+metadata:
+  name: wordpress
+  namespace: wordpress
+spec:

@@ -1,0 +1,52 @@
+### After primary is up, clean up the resources in the primary cluster to avoid conflicts.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upfo-async-cleanup-config
+  namespace: ndk-dr
+data:
+  config: |
+    {
+      "app_configs": [
+        {
+          "app_name": "wordpress",
+          "source_namespace": "wordpress"
+        }
+      ]
+    }
+
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ndk-upfo-async-cleanup-job
+  namespace: ndk-dr
+spec:
+  activeDeadlineSeconds: 21600 # 6 hours, estimate for multiple apps
+  template:
+    spec:
+      containers:
+      - name: ndk-dr-container
+        image: harbor.thencpnutanix.com/ndk/recipes:2.0.0
+        args:
+        - -op_name=upfo_async_cleanup
+        volumeMounts:
+        - name: source-secret-volume
+          mountPath: /app/source.kubeconfig
+          subPath: config
+        - name: config-volume
+          mountPath: /app/config.json
+          subPath: config
+      imagePullSecrets:
+      - name: recipe-pull-secret
+      restartPolicy: Never
+      volumes:
+      - name: config-volume
+        configMap:
+          name: upfo-async-cleanup-config
+      - name: source-secret-volume
+        secret:
+          secretName: source-kubeconfig-secret
+  backoffLimit: 0 # no restart on failure
