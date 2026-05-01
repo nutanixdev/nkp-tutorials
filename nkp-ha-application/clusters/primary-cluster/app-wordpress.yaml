@@ -52,21 +52,25 @@
 
 
 
-# After failover, before bringing up the WordPress app in the primary cluster, patch the Kustomization on primary to 0 replicas.
+# After failover, when primary cluster is up, update wordpress to 0 replicas to avoid split brain.
 
 ---
 # apiVersion: kustomize.toolkit.fluxcd.io/v1
 # kind: Kustomization
 # metadata:
-#   name: wordpress-stack
+#   name: wordpress-app
 #   namespace: flux-system
 # spec:
+#   dependsOn:
+#     - name: wordpress-gatewayapi
+#     - name: wordpress-gslb
 #   interval: 10m
-#   path: ./nkp-ha-application/applications/wordpress/base
+#   retryInterval: 1m
+#   path: ./nkp-ha-application/applications/wordpress/overlays
 #   prune: true
 #   sourceRef:
 #     kind: GitRepository
-#     name: flux-system
+#     name: technote-repo
 #   patches:
 #     - patch: |
 #         apiVersion: apps/v1

@@ -1,8 +1,14 @@
 
-# Velero installation steps on NKP with Nutanix Objects S3 backend
 
-# Create a secret. Replace xyz with bucket access credentials
+# Velero Installation on NKP with Nutanix Objects S3 Backend
 
+---
+
+## 1. Create the cloud credentials Secret
+
+Replace `xyz` with your actual bucket access credentials.
+
+```yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -14,10 +20,15 @@ stringData:
     [default]
     aws_access_key_id = xyz
     aws_secret_access_key = xyz
+```
 
-
-# Apply this override config in NKP UI for Velero app. Replace xyz with Objects IP address/FQDN.
 ---
+
+## 2. Apply the Velero Override Configuration
+
+Replace `xyz` with your Nutanix Objects IP address or FQDN.
+
+```yaml
 configuration:
   backupStorageLocation:
     - bucket: nkp-velero
@@ -53,3 +64,6 @@ nodeAgent:
   priorityClassName: dkp-critical-priority
   resources:
     limits: null
+```
+
+---
