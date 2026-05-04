@@ -9,12 +9,6 @@ metadata:
 spec:
  applicationSelector:
   resourceLabelSelectors:
-   - includeResources: 
-     - group: ""
-       kind: PersistentVolumeClaim
-     - group: apps
-       kind: Deployment
-     - group: ""
-       kind: Service
-     - group: ""
-       kind: Secret
+   - labelSelector:
+       matchLabels:
+         app: wordpress
