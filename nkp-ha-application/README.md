@@ -1,7 +1,7 @@
 
 # NKP Application HA & DR Solution
 
-This repository contains declarative configurations for deploying a highly available, active/passive application solution across two independent Nutanix Kubernetes Platform (NKP) clusters.
+This repository contains declarative configurations for deploying a highly available, active/passive application solution across two independent Nutanix Kubernetes Platform (NKP) clusters. This is intended to be used together with the NKP Tech Note for setting up a WordPress application in an active/passive deployment scenario.
 
 The solution leverages **GitOps** for configuration consistency and **Nutanix Data Services for Kubernetes (NDK)** for stateful data protection across two datacenters, providing business continuity and disaster recovery (BCDR) for cloud-native applications.
 
@@ -41,5 +41,3 @@ The configuration manifests for the core BCDR tools are organized as follows:
 
 3. [**velero**](velero-backup/):  
    Manifests for using Velero for namespace or cluster-level backups, offering a faster restoration path for localized failures within the original cluster.
-
----
