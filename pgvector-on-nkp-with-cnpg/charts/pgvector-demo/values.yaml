@@ -1,0 +1,6 @@
+name: pgvector-demo
+instances: 1
+imageName: ghcr.io/cloudnative-pg/postgresql:17-standard-trixie
+storageSize: 10Gi
+database: app
+owner: app
