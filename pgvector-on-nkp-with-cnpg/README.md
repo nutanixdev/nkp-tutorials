@@ -1,4 +1,4 @@
-# 🧠 Running PostgreSQL + pgvector on Kubernetes with NKP
+# 🧠 Running PostgreSQL + pgvector on NKP with CloudNativePG
 
 This tutorial demonstrates how to quickly deploy PostgreSQL with the `pgvector` extension on a NKP Kubernetes cluster using CloudNativePG (CNPG). The deployment automatically creates a sample vector-enabled database with fake embeddings and similarity search examples.
 
