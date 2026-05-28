@@ -196,7 +196,41 @@ LIMIT 3;
 
 ## 🖥 Optional pgAdmin Deployment
 
-For a friendly UI experience, deploy pgAdmin using the CNPG plugin:
+For a friendly UI experience, you can deploy pgAdmin using the CloudNativePG (`kubectl cnpg`) plugin.
+
+> ⚠️ **Important**
+>
+> The `kubectl cnpg` plugin is not installed by default.
+>
+> Install it first before using the pgAdmin helper commands.
+
+### Install the CNPG kubectl Plugin
+
+#### macOS (Homebrew)
+
+```bash
+brew install cloudnative-pg/tap/cnpg
+```
+
+#### Linux / Generic Installation
+
+```bash
+curl -sSfL \
+  https://github.com/cloudnative-pg/cloudnative-pg/raw/main/hack/install-cnpg-plugin.sh \
+  | sudo sh -s -- -b /usr/local/bin
+```
+
+Verify installation:
+
+```bash
+kubectl cnpg version
+```
+
+---
+
+## 🚀 Deploy pgAdmin
+
+Deploy pgAdmin in desktop mode:
 
 ```bash
 kubectl cnpg pgadmin4 --mode desktop pgvector-demo
