@@ -6,7 +6,7 @@ spec:
   interval: 5m
   chart:
     spec:
-      chart: ./charts/pgvector-demo
+      chart: ./pgvector-on-nkp-with-cnpg/charts/pgvector-demo
       sourceRef:
         kind: GitRepository
         name: pgvector-on-nkp-with-cnpg
