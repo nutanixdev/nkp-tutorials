@@ -1,95 +1,199 @@
 # 🧠 Running PostgreSQL + pgvector on NKP with CloudNativePG
 
-This tutorial demonstrates how to quickly deploy PostgreSQL with the `pgvector` extension on a NKP Kubernetes cluster using CloudNativePG (CNPG). The deployment automatically creates a sample vector-enabled database with fake embeddings and similarity search examples.
+This tutorial demonstrates how to deploy PostgreSQL with the `pgvector` extension on a Nutanix Kubernetes Platform (NKP) cluster using CloudNativePG (CNPG).
+
+The deployment creates a PostgreSQL database named `app`, enables the `pgvector` extension, creates a sample `documents` table, inserts fake vector embeddings, and adds a HNSW index for similarity search testing.
 
 This setup is designed for experimentation, demos, and RAG/vector-search proof-of-concepts running directly on Kubernetes.
 
-> ✅ **Prerequisites**:
+> ✅ **Prerequisites**
 >
 > * A running NKP Kubernetes cluster
-> * `kubectl` access to the cluster
 > * CloudNativePG Operator installed
+> * `kubectl` access to the cluster
 >
-> ⚠️ **NKP Ultimate Requirement**
+> ⚠️ **NKP Edition Guidance**
 >
-> This example uses **NKP Projects Continuous Deployment** to deploy the manifest declaratively through GitOps.
->
-> * **NKP Ultimate** → fully supported with Projects + Continuous Deployment
-> * **NKP Pro** → supported by manually applying the manifest with `kubectl apply -f`
+> * **NKP Ultimate**: Recommended. Use NKP Projects Continuous Deployment to deploy from Git.
+> * **NKP Pro**: Supported. Apply the manifest manually with `kubectl`.
 
 ---
 
-## Table of Contents
+# Table of Contents
 
 - [🧠 Running PostgreSQL + pgvector on NKP with CloudNativePG](#-running-postgresql--pgvector-on-nkp-with-cloudnativepg)
-  - [Table of Contents](#table-of-contents)
-  - [🚀 Deployment Instructions](#-deployment-instructions)
-    - [NKP Ultimate (Recommended)](#nkp-ultimate-recommended)
-      - [🧩 Configure the Git Source](#-configure-the-git-source)
-      - [⚙️ NKP Pro Alternative](#️-nkp-pro-alternative)
-    - [📄 What's Deployed](#-whats-deployed)
-    - [🧩 Example Cluster Manifest](#-example-cluster-manifest)
-  - [🔎 Accessing the Database](#-accessing-the-database)
-  - [🖥 Optional pgAdmin Deployment](#-optional-pgadmin-deployment)
-    - [Install the CNPG kubectl Plugin](#install-the-cnpg-kubectl-plugin)
-      - [macOS (Homebrew)](#macos-homebrew)
-      - [Linux / Generic Installation](#linux--generic-installation)
-  - [🚀 Deploy pgAdmin](#-deploy-pgadmin)
-  - [🧹 Cleanup](#-cleanup)
-  - [📁 File Overview](#-file-overview)
+- [Table of Contents](#table-of-contents)
+- [Deployment Options](#deployment-options)
+- [Option 1: NKP Ultimate with Continuous Deployment](#option-1-nkp-ultimate-with-continuous-deployment)
+  - [How NKP Determines What Gets Deployed](#how-nkp-determines-what-gets-deployed)
+  - [HelmRelease-based Deployment](#helmrelease-based-deployment)
+  - [Updating Helm Values](#updating-helm-values)
+- [Option 2: Manual kubectl Deployment](#option-2-manual-kubectl-deployment)
+- [What's Deployed](#whats-deployed)
+- [Accessing the Database](#accessing-the-database)
+- [Optional pgAdmin Deployment](#optional-pgadmin-deployment)
+  - [Install the CNPG kubectl Plugin](#install-the-cnpg-kubectl-plugin)
+    - [macOS](#macos)
+    - [Linux / Generic Installation](#linux--generic-installation)
+  - [Deploy pgAdmin](#deploy-pgadmin)
+- [Cleanup](#cleanup)
+- [File Overview](#file-overview)
   - [🧩 Related Links](#-related-links)
 
 ---
 
-## 🚀 Deployment Instructions
+# Deployment Options
 
-### NKP Ultimate (Recommended)
+This demo supports two deployment models:
 
-With NKP Ultimate, the deployment can be fully managed through **NKP Projects Continuous Deployment** using a Git repository as the source of truth.
-
-Instead of manually applying the manifest with `kubectl`, configure a Git source that points to the repository containing the `pgvector-demo.yaml` manifest.
-
-This approach provides:
-
-* GitOps-based continuous reconciliation
-* Declarative lifecycle management
-* Drift detection and remediation
-* Multi-cluster deployment workflows
-* Integration with NKP Projects
+| Option                             | Recommended For          | Description                                                  |
+| ---------------------------------- | ------------------------ | ------------------------------------------------------------ |
+| NKP Ultimate Continuous Deployment | NKP Ultimate users       | NKP continuously reconciles the repository path using GitOps |
+| Manual kubectl Deployment          | NKP Pro or quick testing | Apply the CNPG manifest directly with `kubectl`              |
 
 ---
 
-#### 🧩 Configure the Git Source
+# Option 1: NKP Ultimate with Continuous Deployment
+
+With NKP Ultimate, the deployment can be fully managed through **NKP Projects Continuous Deployment** using Git as the source of truth.
+
+Instead of manually applying manifests with `kubectl`, configure a Git source that points to this repository path.
 
 Navigate to:
 
-```txt
+```text
 Projects → Continuous Deployment → GitOps Sources
 ```
 
 Create a new Git source with the following configuration:
 
-| Field          | Value                                             |
-| -------------- | ------------------------------------------------- |
-| Name           | `pgvector-on-nkp-with-cnpg`                       |
-| Repository URL | `https://github.com/nutanixdev/nkp-tutorials.git` |
-| Git Ref Type   | `Branch`                                          |
-| Branch Name    | `main`                                            |
-| Path           | `./pgvector-on-nkp-with-cnpg`                     |
+| Field              | Value                                             |
+| ------------------ | ------------------------------------------------- |
+| Name               | `pgvector-on-nkp-with-cnpg`                       |
+| Repository URL     | `https://github.com/nutanixdev/nkp-tutorials.git` |
+| Git Ref Type       | `Branch`                                          |
+| Branch Name        | `main`                       |
+| Path               | `./pgvector-on-nkp-with-cnpg`                     |
+| Primary Git Secret | `None`, unless your repository is private         |
 
-Once the Git source is configured, NKP Continuous Deployment will automatically:
-
-1. Detect the CloudNativePG manifest
-2. Deploy the PostgreSQL cluster
-3. Enable the `pgvector` extension
-4. Create the sample vector-enabled database
-5. Continuously reconcile the deployment state
+Once the Git source is configured, NKP Continuous Deployment will reconcile the resources found in the selected path.
 
 ---
 
-#### ⚙️ NKP Pro Alternative
+## How NKP Determines What Gets Deployed
 
-If using NKP Pro, apply the manifest manually:
+This repository includes a `kustomization.yaml` file:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - helmrelease.yaml
+# - pgvector-demo.yaml
+```
+
+The `kustomization.yaml` file determines what NKP deploys from the repository path.
+
+In this example:
+
+* `helmrelease.yaml` is enabled
+* `pgvector-demo.yaml` is commented out
+* NKP will therefore deploy the HelmRelease-based workflow
+* `pgvector-demo.yaml` will be ignored
+
+This means:
+
+* NKP will render and apply the `HelmRelease`
+* Flux will deploy the local Helm chart
+* The deployment will appear in the NKP UI as a HelmRelease-managed application
+
+If the repository instead contained:
+
+```yaml
+resources:
+  - pgvector-demo.yaml
+```
+
+without a HelmRelease, NKP would simply deploy the raw Kubernetes manifests directly.
+
+---
+
+## HelmRelease-based Deployment
+
+This repository includes:
+
+```text
+helmrelease.yaml
+```
+
+which deploys the local Helm chart:
+
+```text
+charts/pgvector-demo
+```
+
+The Helm chart renders a CloudNativePG PostgreSQL cluster with:
+
+* PostgreSQL 17
+* `pgvector`
+* Sample vector data
+* HNSW similarity index
+
+The included HelmRelease looks similar to:
+
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pgvector-demo
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: ./pgvector-on-nkp-with-cnpg/charts/pgvector-demo
+      sourceRef:
+        kind: GitRepository
+        name: pgvector-on-nkp-with-cnpg
+      interval: 5m
+```
+
+---
+
+## Updating Helm Values
+
+The chart values are located in:
+
+```text
+charts/pgvector-demo/values.yaml
+```
+
+Example:
+
+```yaml
+name: pgvector-demo
+instances: 1
+imageName: ghcr.io/cloudnative-pg/postgresql:17-standard-trixie
+storageSize: 10Gi
+database: app
+owner: app
+```
+
+This allows customization of:
+
+* PostgreSQL image
+* Storage size
+* Cluster name
+* Database name
+* Replica count
+
+without modifying the chart template directly.
+
+---
+
+# Option 2: Manual kubectl Deployment
+
+For NKP Pro, or for quick testing, apply the manifest directly:
 
 ```bash
 kubectl apply -f pgvector-demo.yaml
@@ -102,81 +206,26 @@ kubectl get clusters.postgresql.cnpg.io
 kubectl get pods
 ```
 
----
-
-### 📄 What's Deployed
-
-The manifest creates:
-
-* A **CloudNativePG PostgreSQL cluster**
-* A PostgreSQL database named `app`
-* The **pgvector** PostgreSQL extension
-* A sample **documents** table
-* Fake vector embeddings for experimentation
-* A **HNSW vector index** for similarity search
+Unlike the NKP Ultimate GitOps workflow, this option applies the raw CloudNativePG manifest directly.
 
 ---
 
-### 🧩 Example Cluster Manifest
+# What's Deployed
 
-```yaml
-apiVersion: postgresql.cnpg.io/v1
-kind: Cluster
-metadata:
-  name: pgvector-demo
-spec:
-  instances: 1
+The demo deploys:
 
-  imageName: ghcr.io/cloudnative-pg/postgresql:17-standard-trixie
-
-  storage:
-    size: 10Gi
-
-  bootstrap:
-    initdb:
-      database: app
-      owner: app
-
-      postInitApplicationSQL:
-        - "CREATE EXTENSION IF NOT EXISTS vector;"
-        - |
-          CREATE TABLE documents (
-            id bigserial PRIMARY KEY,
-            title text NOT NULL,
-            content text NOT NULL,
-            embedding vector(3)
-          );
-        - |
-          INSERT INTO documents (title, content, embedding) VALUES
-            (
-              'Kubernetes backups',
-              'Backups protect persistent application data.',
-              '[0.10,0.20,0.30]'
-            ),
-            (
-              'RAG architecture',
-              'A RAG system retrieves context before generating answers.',
-              '[0.11,0.19,0.31]'
-            ),
-            (
-              'PostgreSQL recovery',
-              'WAL archiving enables point-in-time recovery.',
-              '[0.80,0.10,0.10]'
-            ),
-            (
-              'Cluster autoscaling',
-              'Autoscaling changes node capacity based on workload demand.',
-              '[0.20,0.75,0.10]'
-            );
-        - |
-          CREATE INDEX documents_embedding_hnsw_idx
-          ON documents
-          USING hnsw (embedding vector_cosine_ops);
-```
+* A CloudNativePG PostgreSQL cluster
+* PostgreSQL 17 using the CNPG standard image
+* A database named `app`
+* A database owner named `app`
+* The `pgvector` PostgreSQL extension
+* A sample `documents` table
+* Fake vector embeddings
+* A HNSW vector index for similarity search
 
 ---
 
-## 🔎 Accessing the Database
+# Accessing the Database
 
 Connect to PostgreSQL:
 
@@ -184,19 +233,19 @@ Connect to PostgreSQL:
 kubectl exec -it pgvector-demo-1 -- psql -d app
 ```
 
-Verify the extension:
+Verify the installed extensions:
 
 ```sql
 \dx
 ```
 
-Verify the table:
+Verify the table exists:
 
 ```sql
 \dt
 ```
 
-Show all documents:
+Show all sample documents:
 
 ```sql
 SELECT * FROM documents;
@@ -214,11 +263,13 @@ ORDER BY distance
 LIMIT 3;
 ```
 
+The smaller the distance value, the more similar the vector is to the query vector.
+
 ---
 
-## 🖥 Optional pgAdmin Deployment
+# Optional pgAdmin Deployment
 
-For a friendly UI experience, you can deploy pgAdmin using the CloudNativePG (`kubectl cnpg`) plugin.
+For a friendly UI experience, you can deploy pgAdmin using the CloudNativePG `kubectl cnpg` plugin.
 
 > ⚠️ **Important**
 >
@@ -226,15 +277,17 @@ For a friendly UI experience, you can deploy pgAdmin using the CloudNativePG (`k
 >
 > Install it first before using the pgAdmin helper commands.
 
-### Install the CNPG kubectl Plugin
+---
 
-#### macOS (Homebrew)
+## Install the CNPG kubectl Plugin
+
+### macOS
 
 ```bash
 brew install cloudnative-pg/tap/cnpg
 ```
 
-#### Linux / Generic Installation
+### Linux / Generic Installation
 
 ```bash
 curl -sSfL \
@@ -250,7 +303,7 @@ kubectl cnpg version
 
 ---
 
-## 🚀 Deploy pgAdmin
+## Deploy pgAdmin
 
 Deploy pgAdmin in desktop mode:
 
@@ -262,20 +315,19 @@ Port-forward locally:
 
 ```bash
 kubectl port-forward \
-  \
   deployment/pgvector-demo-pgadmin4 \
   8080:80
 ```
 
-Access:
+Access pgAdmin:
 
-```txt
+```text
 http://localhost:8080
 ```
 
 ---
 
-## 🧹 Cleanup
+# Cleanup
 
 Remove the PostgreSQL cluster:
 
@@ -283,26 +335,34 @@ Remove the PostgreSQL cluster:
 kubectl delete clusters.postgresql.cnpg.io pgvector-demo
 ```
 
-Remove persistent storage:
+Remove persistent storage (if the StorageClass is configured to retain the PVC):
 
 ```bash
 kubectl delete pvc -l cnpg.io/cluster=pgvector-demo
 ```
 
-Remove the namespace:
+If pgAdmin was deployed, remove it:
 
 ```bash
-kubectl delete namespace pgvector
+kubectl delete deployment/pgvector-demo-pgadmin4 \ 
+  service/pgvector-demo-pgadmin4 \ 
+  secret/pgvector-demo-pgadmin4 \ 
+  configmap/pgvector-demo-pgadmin4
 ```
 
 ---
 
-## 📁 File Overview
+# File Overview
 
-| File                 | Description                                    |
-| -------------------- | ---------------------------------------------- |
-| `pgvector-demo.yaml` | CloudNativePG PostgreSQL + pgvector deployment |
-| `README.md`          | Deployment and usage instructions              |
+| File                                          | Description                                                         |
+| --------------------------------------------- | ------------------------------------------------------------------- |
+| `README.md`                                   | Deployment and usage instructions                                   |
+| `kustomization.yaml`                          | Controls which resources NKP Continuous Deployment reconciles       |
+| `helmrelease.yaml`                            | Flux HelmRelease that deploys the local Helm chart                  |
+| `pgvector-demo.yaml`                          | Direct CloudNativePG Cluster manifest for manual kubectl deployment |
+| `charts/pgvector-demo/Chart.yaml`             | Helm chart metadata                                                 |
+| `charts/pgvector-demo/values.yaml`            | Default chart values                                                |
+| `charts/pgvector-demo/templates/cluster.yaml` | Helm template for the CloudNativePG Cluster                         |
 
 ---
 
