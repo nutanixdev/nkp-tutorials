@@ -19,6 +19,28 @@ This setup is designed for experimentation, demos, and RAG/vector-search proof-o
 
 ---
 
+## Table of Contents
+
+- [🧠 Running PostgreSQL + pgvector on NKP with CloudNativePG](#-running-postgresql--pgvector-on-nkp-with-cloudnativepg)
+  - [Table of Contents](#table-of-contents)
+  - [🚀 Deployment Instructions](#-deployment-instructions)
+    - [NKP Ultimate (Recommended)](#nkp-ultimate-recommended)
+      - [🧩 Configure the Git Source](#-configure-the-git-source)
+      - [⚙️ NKP Pro Alternative](#️-nkp-pro-alternative)
+    - [📄 What's Deployed](#-whats-deployed)
+    - [🧩 Example Cluster Manifest](#-example-cluster-manifest)
+  - [🔎 Accessing the Database](#-accessing-the-database)
+  - [🖥 Optional pgAdmin Deployment](#-optional-pgadmin-deployment)
+    - [Install the CNPG kubectl Plugin](#install-the-cnpg-kubectl-plugin)
+      - [macOS (Homebrew)](#macos-homebrew)
+      - [Linux / Generic Installation](#linux--generic-installation)
+  - [🚀 Deploy pgAdmin](#-deploy-pgadmin)
+  - [🧹 Cleanup](#-cleanup)
+  - [📁 File Overview](#-file-overview)
+  - [🧩 Related Links](#-related-links)
+
+---
+
 ## 🚀 Deployment Instructions
 
 ### NKP Ultimate (Recommended)
