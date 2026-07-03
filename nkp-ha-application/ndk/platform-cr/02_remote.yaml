@@ -1,0 +1,12 @@
+### Create connection to NDK server in remote Kubernetes cluster
+
+apiVersion: dataservices.nutanix.com/v1alpha1
+kind: Remote
+metadata:
+  name: ndk-nutanix-secondary
+spec:
+  clusterName: nutanix-secondary
+  ndkServiceIp: 10.42.246.247
+  ndkServicePort: 2021
+  tlsConfig:
+    skipTLSVerify: true

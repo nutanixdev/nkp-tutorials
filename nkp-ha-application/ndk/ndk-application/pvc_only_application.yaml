@@ -1,0 +1,17 @@
+### NDK handles failover of only storage. 
+### GitOps synchronization for application and networking manifests.
+
+apiVersion: dataservices.nutanix.com/v1alpha1
+kind: Application
+metadata:
+ name: wordpress
+ namespace: wordpress
+spec:
+ applicationSelector:
+  resourceLabelSelectors:
+   - includeResources: 
+     - group: ""
+       kind: PersistentVolumeClaim
+
+
+    

@@ -1,0 +1,59 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wordpress-cert
+  namespace: wordpress
+spec:
+  secretName: wordpress-tls-cert
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - ${WP_HOSTNAME}
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: wordpress-gateway
+  namespace: wordpress
+  annotations:
+    traefik.io/router.entrypoints: web, websecure
+spec:
+  gatewayClassName: traefik
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 8000
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https
+      protocol: HTTPS
+      port: 8443 # Default Traefik websecure container port
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: wordpress-tls-cert # Ensure this secret exists
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: wordpress-route
+  namespace: wordpress
+spec:
+  parentRefs:
+    - name: wordpress-gateway
+  hostnames:
+    - ${WP_HOSTNAME}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: wordpress
+          port: 80

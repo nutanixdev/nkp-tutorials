@@ -1,0 +1,81 @@
+### Planned failover from DR site to primary, or from primary to DR site for migration usecase.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: migrate-config
+data:
+  # application selectors for the app
+  # should follow convention from:
+  # https://portal.nutanix.com/page/documents/details?targetId=Nutanix-Data-Services-for-Kubernetes-v1_2:top-app-cr-manual-create-cli-k8s-t.html
+  config: |
+    {
+      "app_configs": [
+        {
+          "source_namespace": "wordpress",
+          "target_namespace": "wordpress",
+          "replication_target_name": "replication-target-wordpress",
+          "app_name": "wordpress",
+          "create_if_not_exists": true
+        }
+      ]
+    }
+
+### When you failback from DR to primary, reverse the secrets and kubeconfigs in the Job manifest.
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ndk-migrate-job
+  namespace: ndk-dr
+spec:
+  activeDeadlineSeconds: 21600 # 6 hours, estimate for multiple apps
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - name: ndk-dr-container
+        image: harbor.thencpnutanix.com/ndk/recipes:2.0.0
+        args:
+        - -op_name=migrate
+        volumeMounts:
+        - name: source-secret-volume
+          mountPath: /app/source.kubeconfig
+          subPath: config
+        - name: target-secret-volume
+          mountPath: /app/target.kubeconfig
+          subPath: config
+        - name: config-volume
+          mountPath: /app/config.json
+          subPath: config
+        - name: ndk-primary-pc-creds-volume
+          mountPath: /app/primary-pc-creds
+          subPath: key
+        - name: ndk-secondary-pc-creds-volume
+          mountPath: /app/secondary-pc-creds
+          subPath: key
+        securityContext:
+          allowPrivilegeEscalation: false
+      imagePullSecrets:
+      - name: recipe-pull-secret
+      restartPolicy: Never
+      volumes:
+      - name: config-volume
+        configMap:
+          name: migrate-config
+      - name: source-secret-volume
+        secret:
+          secretName: target-kubeconfig-secret
+      - name: target-secret-volume
+        secret:
+          secretName: source-kubeconfig-secret
+      - name: ndk-primary-pc-creds-volume
+        secret:
+          secretName: ndk-failover-secondary-pc-creds
+          optional: true
+      - name: ndk-secondary-pc-creds-volume
+        secret:
+          secretName: ndk-failover-primary-pc-creds
+          optional: true
+  backoffLimit: 0 # no restart on failure

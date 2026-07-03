@@ -1,0 +1,15 @@
+---
+apiVersion: k8gb.io/v1beta1
+kind: Gslb
+metadata:
+  name: boutique-gslb
+  namespace: boutique
+spec:
+  resourceRef:
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    name: boutique-route # Pointing to the new Route
+  strategy:
+    dnsTtlSeconds: 60
+    primaryGeoTag: k8s-primary
+    type: failover

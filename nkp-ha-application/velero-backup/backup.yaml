@@ -1,0 +1,27 @@
+
+# Velero Backup: Snapshot-Based
+
+# This backup configuration will:
+# - Take a backup of both Volumes and Files (PVs).
+# - Only include application resources (not Flux CRs, Gateway API CRs, NDK CRs, etc.).
+# - Use includedResources to control exactly what is backed up.
+# - Take a VolumeSnapshot for all PVs, upload to S3, and delete the snapshot after completion.
+
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: wordpress-backup
+  namespace: kommander    # Namespace where Velero is installed (NKP Pro/Ultimate).
+spec:
+  includedNamespaces:
+    - wordpress
+  includedResources:
+    - deployments
+    - services
+    - persistentvolumeclaims
+    - persistentvolumes
+    - secrets
+    - configmaps
+  storageLocation: default
+  snapshotVolumes: true
+  snapshotMoveData: true
