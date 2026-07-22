@@ -1,0 +1,76 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: emailservice
+  namespace: boutique
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: checkoutservice
+  namespace: boutique
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: recommendationservice
+  namespace: boutique
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: frontend
+  namespace: boutique
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: paymentservice
+  namespace: boutique
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: productcatalogservice
+  namespace: boutique
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cartservice
+  namespace: boutique
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: loadgenerator
+  namespace: boutique
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: currencyservice
+  namespace: boutique
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: shippingservice
+  namespace: boutique
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: adservice
+  namespace: boutique

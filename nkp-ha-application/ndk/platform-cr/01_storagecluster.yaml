@@ -1,0 +1,9 @@
+# Define StorageCluster on both clusters
+
+apiVersion: dataservices.nutanix.com/v1alpha1
+kind: StorageCluster
+metadata:
+  name: nutanix-primary
+spec:
+  storageServerUuid: 00062f6e-aa57-ab88-0000-00000000e2a1    # PE UUID
+  managementServerUuid: 45cb22fb-5964-420d-be54-d0f06347f444 # PC UUID (Run from PC - nuclei cluster.list)

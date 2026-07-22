@@ -1,0 +1,63 @@
+### To run on DR site to reset replication after the primary site is up. 
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reset-replication-config
+  namespace: ndk-dr
+data:
+  config: |
+    {
+      "app_configs": [
+        {
+          "target_namespace": "wordpress",
+          "app_pplan_name": "wordpress-app-plan"
+        }
+      ]
+    }
+
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ndk-reset-replication-job
+  namespace: ndk-dr
+spec:
+  activeDeadlineSeconds: 21600 # 6 hours, estimate for multiple apps
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - name: ndk-dr-container
+        image: harbor.thencpnutanix.com/ndk/recipes:2.0.0
+        args:
+        - -op_name=reset-replication
+        volumeMounts:
+        - name: target-secret-volume
+          mountPath: /app/target.kubeconfig
+          subPath: config
+        - name: config-volume
+          mountPath: /app/config.json
+          subPath: config
+        - name: ndk-secondary-pc-creds-volume
+          mountPath: /app/secondary-pc-creds
+          subPath: key
+        securityContext:
+          allowPrivilegeEscalation: false
+      imagePullSecrets:
+        - name: recipe-pull-secret
+      restartPolicy: Never
+      volumes:
+      - name: config-volume
+        configMap:
+          name: reset-replication-config
+      - name: target-secret-volume
+        secret:
+          secretName: target-kubeconfig-secret
+      - name: ndk-secondary-pc-creds-volume
+        secret:
+          secretName: ndk-failover-secondary-pc-creds
+          optional: true
+  backoffLimit: 0

@@ -1,0 +1,69 @@
+### To run UPFO on DR site when primary site is down. 
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: failover-config
+  namespace: ndk-dr
+data:
+  config: |
+    {
+      "app_configs": [
+        {
+          "target_namespace": "wordpress",
+          "app_pplan_name": "wordpress-app-plan",
+          "app_name": "wordpress", # optional
+        }
+      ]
+    }
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ndk-failover-job
+  namespace: ndk-dr
+spec:
+  activeDeadlineSeconds: 21600 # 6 hours, estimate for multiple apps
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - name: ndk-dr-container
+        image: harbor.thencpnutanix.com/ndk/recipes:2.0.0
+        args:
+        - -op_name=failover
+        volumeMounts:
+        - name: source-secret-volume
+          mountPath: /app/source.kubeconfig
+          subPath: config
+        - name: target-secret-volume
+          mountPath: /app/target.kubeconfig
+          subPath: config
+        - name: config-volume
+          mountPath: /app/config.json
+          subPath: config
+        - name: ndk-secondary-pc-creds-volume
+          mountPath: /app/secondary-pc-creds
+          subPath: key
+        securityContext:
+          allowPrivilegeEscalation: false
+      imagePullSecrets:
+      - name: recipe-pull-secret
+      restartPolicy: Never
+      volumes:
+      - name: config-volume
+        configMap:
+          name: failover-config
+      - name: source-secret-volume
+        secret:
+          secretName: source-kubeconfig-secret
+      - name: target-secret-volume
+        secret:
+          secretName: target-kubeconfig-secret
+      - name: ndk-secondary-pc-creds-volume
+        secret:
+          secretName: ndk-failover-secondary-pc-creds
+          optional: true
+  backoffLimit: 0

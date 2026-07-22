@@ -1,0 +1,85 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: wordpress-gatewayapi
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  path: ./nkp-ha-application/infrastructure/gateway_api/wordpress
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: technote-repo
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings # Injects wordpress.gslb.thencpnutanix.com
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: wordpress-gslb
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  path: ./nkp-ha-application/infrastructure/gslb/wordpress
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: technote-repo
+
+
+### Uncomment the below Kustomization if you want wordpress app to be managed through FluxCD (not the storage).
+# ---
+# apiVersion: kustomize.toolkit.fluxcd.io/v1
+# kind: Kustomization
+# metadata:
+#   name: wordpress-app
+#   namespace: flux-system
+# spec:
+#   dependsOn:
+#     - name: wordpress-gatewayapi
+#     - name: wordpress-gslb
+#   interval: 10m
+#   retryInterval: 1m
+#   path: ./nkp-ha-application/applications/wordpress/overlays
+#   prune: true
+#   sourceRef:
+#     kind: GitRepository
+#     name: technote-repo
+
+
+
+### Only applicable if above Kustomization is uncommented.
+### After failover, when the primary cluster is up, update wordpress to 0 replicas to avoid split brain.
+
+---
+# apiVersion: kustomize.toolkit.fluxcd.io/v1
+# kind: Kustomization
+# metadata:
+#   name: wordpress-app
+#   namespace: flux-system
+# spec:
+#   dependsOn:
+#     - name: wordpress-gatewayapi
+#     - name: wordpress-gslb
+#   interval: 10m
+#   retryInterval: 1m
+#   path: ./nkp-ha-application/applications/wordpress/overlays
+#   prune: true
+#   sourceRef:
+#     kind: GitRepository
+#     name: technote-repo
+#   patches:
+#     - patch: |
+#         apiVersion: apps/v1
+#         kind: Deployment
+#         metadata:
+#           name: wordpress
+#           namespace: wordpress
+#         spec:
+#           replicas: 0

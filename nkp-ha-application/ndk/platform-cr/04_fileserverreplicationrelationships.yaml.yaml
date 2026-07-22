@@ -1,0 +1,11 @@
+### Create a relationship to replicate data between fileservers
+
+apiVersion: dataservices.nutanix.com/v1alpha1
+kind: FileServerReplicationRelationships
+metadata:
+  name: wordpress-fssr
+spec:
+  remoteName: ndk-nutanix-secondary
+  relationships:
+    - primaryFileserverFQDN: fs-prismprimary.ntnxlab.local
+      recoveryFileserverFQDN: fs-prismdr.ntnxlab.local
