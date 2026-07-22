@@ -73,4 +73,4 @@ kubectl delete namespace localai
 
 ## 🧩 Related Links
 
-* [LocalAI Documentation](https://localai.io/)
+* [LocalAI Documentation](https://localai.io/docs/)
